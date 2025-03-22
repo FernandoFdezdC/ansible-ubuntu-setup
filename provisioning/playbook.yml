@@ -1,0 +1,40 @@
+---
+- hosts: all
+  # connection: local      # If local, the playbook is of orchestration type. Else, it is of provisioning type.
+  gather_facts: true    # If false, it does not get ansible_hostname, which is used for the mysql module
+  become: true
+  roles:
+    - ffdez.common
+    - ffdez.python
+    - role: ffdez.spark
+      install_latest_spark_version: true
+      install_mysql_connector: false
+      install_jupyter_notebook: false
+    # - role: ffdez.mysql
+    #   mysql_root_password: 'root'
+    # - role: ffdez.torch
+    #   install_latest_torch_version: true
+  tasks:
+    # - name: Restart server
+    #   command: sudo reboot
+
+    # - name: Show ansible_env.HOME value
+    #   debug:
+    #     msg: "{{ ansible_env.HOME }}"
+
+    # - name: Check if Ansible can access key file
+    #   debug:
+    #     msg: "{{ansible_ssh_private_key_file}}"
+
+
+    # - name: Run lsb_release -a
+    #   command: lsb_release -a
+    #   register: lsb_info
+
+    # - name: Show OS information
+    #   debug:
+    #     msg: "{{ lsb_info.stdout }}"
+
+    # - name: Get Ansible hostname
+    #   debug:
+    #     msg: "{{ansible_hostname}}"

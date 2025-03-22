@@ -1,0 +1,18 @@
+---
+# Establecer la variable de entorno de Java (en Hadoop):
+- set_fact:
+    export_var: "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64"
+- name: Check if /opt/hadoop-3.3.6/etc/hadoop/hadoop-env.sh already has this variable
+  shell: "cat /opt/hadoop-3.3.6/etc/hadoop/hadoop-env.sh"
+  register: hadoop_java_output
+  changed_when: false
+- name: Check JAVA_HOME
+  debug:
+    msg: "JAVA_HOME is set: {{ export_var in bashrc_output.stdout }}"
+- name: Set JAVA_HOME in Hadoop to /usr/lib/jvm/java-11-openjdk-amd64
+  lineinfile:
+    path: "/opt/hadoop-3.3.6/etc/hadoop/hadoop-env.sh"
+    line: "{{ export_var }}"
+    create: yes
+    state: present
+  when: export_var not in hadoop_java_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada

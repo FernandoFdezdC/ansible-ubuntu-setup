@@ -1,0 +1,35 @@
+---
+- name: Install ubuntu-drivers-common (necessary for seeing recommended nvidia drivers)
+  apt:
+    name: ubuntu-drivers-common
+    state: present
+    update_cache: yes
+
+- name: Output recommended nvidia drivers
+  command: ubuntu-drivers devices
+  changed_when: false
+  register: driver_output
+
+- name: Show 'ubuntu-drivers devices' output
+  debug:
+    msg: "{{ driver_output.stdout }}"
+
+- name: Install recommended nvidia driver
+  apt:
+    name: "{{ recommended_nvidia_driver }}"
+    state: present
+    update_cache: yes
+
+# - name: Reiniciar el servidor
+#   command: sudo reboot
+
+- name: Ensure nvidia is installed
+  command: nvidia-smi
+  register: nvidia_output
+  ignore_errors: yes
+
+- name: Show output from 'nvidia-smi'
+  debug:
+    msg: |
+      Resultado del comando `nvidia-smi`:
+      {{ nvidia_output.stdout if nvidia_output.stdout else "Error: El comando no se ejecutó correctamente." }}

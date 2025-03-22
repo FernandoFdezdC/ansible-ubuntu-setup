@@ -1,0 +1,28 @@
+---
+- name: Crear el directorio ~/.ssh
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/.ssh"
+    state: directory
+    mode: '0700'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+        
+- name: Generar una clave RSA para el usuario
+  ansible.builtin.command: >
+    ssh-keygen -t rsa -P '' -f /home/{{ansible_user}}/.ssh/id_rsa
+  become: yes
+  become_user: "{{ ansible_user }}"
+  args:
+    creates: /home/{{ ansible_user }}/.ssh/id_rsa
+
+- name: Añadir la clave pública al archivo authorized_keys
+  ansible.builtin.lineinfile:
+    path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
+    line: "{{ lookup('file', '/home/{{ ansible_user }}/.ssh/id_rsa.pub') }}"
+    create: yes
+    mode: '0600'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    
+- name: Configurar permisos para authorized_keys
+  ansible.builtin.command: "chmod 0600 /home/{{ansible_user}}/.ssh/authorized_keys"

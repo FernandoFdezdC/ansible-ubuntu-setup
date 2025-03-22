@@ -1,0 +1,10 @@
+---
+- name: Install a specific version of torch, torchvision, and torchaudio
+  # webpage: https://pytorch.org/get-started/locally/
+  pip:
+    name:
+      - torch
+      - torchvision
+      - torchaudio
+    executable: pip3
+    extra_args: "--index-url https://download.pytorch.org/whl/cu121"

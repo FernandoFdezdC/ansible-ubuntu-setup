@@ -1,0 +1,13 @@
+---
+# This is not necessary on Windows Ubuntu terminal:
+# - include_tasks: 'install_nvidia_drivers.yml'
+
+- include_tasks: 'install_gcc.yml'
+
+- include_tasks: 'find_latest_cuda_toolkit_version.yml'
+
+- include_tasks: 'install_cuda_toolkit.yml'
+  when: cuda_versions | length > 0
+
+- include_tasks: 'cuda_system_variables.yml'
+  when: cuda_versions | length > 0

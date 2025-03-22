@@ -1,0 +1,6 @@
+---
+ansible_user: vagrant
+
+# When `provisioning/playbook.yml` is executed with Vagrant, the user is not defined.  
+# On the other hand, if we run it in the Ubuntu terminal on Windows, the user is defined.  
+# Therefore, if we want it to be overwritten when necessary, we must set the variable here.

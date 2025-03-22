@@ -1,0 +1,44 @@
+---
+- name: Get mysql-connector URL
+  command: wget -qO - https://dev.mysql.com/downloads/connector/j/
+  register: mysql_connector_page
+  changed_when: false
+
+# - name: Show mysql-connector page content
+#   debug:
+#     msg: "Page content: {{ mysql_connector_page }}"
+
+- name: Extract the latest version from the mysql-connector download page
+  set_fact:
+    mysql_connector_versions: "{{ mysql_connector_page | regex_findall('Connector/J (\\d+\\.\\d+\\.\\d+)') }}"
+
+- name: Sort and select the latest version
+  set_fact:
+    latest_mysql_connector_version: "{{ (mysql_connector_versions | map('regex_replace', '(\\d+\\.\\d+\\.\\d+)', '\\1') | map('split', '.')) | sort(reverse=true) | first | join('.') }}"
+
+- name: Show latest mysql-connector version
+  debug:
+    msg: "Latest mysql-connector version is: {{ latest_mysql_connector_version }}"
+
+- name: Check if mysql-connector is already installed
+  ansible.builtin.stat:
+    path: "/usr/share/java/mysql-connector-java-{{ latest_mysql_connector_version }}.jar"
+  register: file_stat
+
+- name: Download MySQL Connector-J
+  command: "wget -P /tmp https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-j_{{ latest_mysql_connector_version }}-1ubuntu22.04_all.deb"
+  when: not file_stat.stat.exists
+  changed_when: not file_stat.stat.exists
+
+- name: Install MySQL Connector-J
+  apt:
+    deb: "/tmp/mysql-connector-j_{{ latest_mysql_connector_version }}-1ubuntu22.04_all.deb"
+    state: present
+  when: not file_stat.stat.exists
+
+- name: Clean up downloaded .deb file
+  file:
+    path: "/tmp/mysql-connector-j_{{ latest_mysql_connector_version }}-1ubuntu22.04_all.deb"
+    state: absent
+  when: not file_stat.stat.exists
+  changed_when: not file_stat.stat.exists

@@ -1,0 +1,49 @@
+---
+# Establecer la variable de entorno:
+- set_fact:
+    export_var: "export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}"
+- name: Check if ~/.bashrc already has this variable
+  shell: "cat /home/{{ ansible_user }}/.bashrc"
+  register: bashrc_output
+  changed_when: false
+# - debug:
+#     msg: "{{bashrc_output.stdout}}"
+- name: Check PATH
+  debug:
+    msg: "PATH is set: {{ export_var in bashrc_output.stdout }}"
+- name: Set PATH to /usr/local/cuda/bin:$PATH
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "{{ export_var }}"
+    create: yes
+    state: present
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+- name: Make change definitive
+  shell: ". /home/{{ ansible_user }}/.bashrc"
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+
+# Establecer la variable de entorno:
+- set_fact: latest_cuda_version_point="{{ latest_cuda_version | replace('-', '.') }}"
+- debug:
+    msg: "{{latest_cuda_version_point}}"
+- set_fact:
+    export_var: "export LD_LIBRARY_PATH=/usr/local/cuda-{{latest_cuda_version_point}}/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+- name: Check if ~/.bashrc already has this variable
+  shell: "cat /home/{{ ansible_user }}/.bashrc"
+  register: bashrc_output
+  changed_when: false
+# - debug:
+#     msg: "{{bashrc_output.stdout}}"
+- name: Check LD_LIBRARY_PATH
+  debug:
+    msg: "LD_LIBRARY_PATH is set: {{ export_var in bashrc_output.stdout }}"
+- name: Set LD_LIBRARY_PATH to /usr/local/cuda-12.2/lib64:$LD_LIBRARY_PATH
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "{{ export_var }}"
+    create: yes
+    state: present
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+- name: Make change definitive
+  shell: ". /home/{{ ansible_user }}/.bashrc"
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada

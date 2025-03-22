@@ -1,0 +1,34 @@
+---
+- name: Check if CUDA Toolkit is already installed
+  ansible.builtin.stat:
+    path: "/usr/share/keyrings/cuda-archive-keyring.gpg"
+  register: file_stat
+
+- name: Download CUDA Toolkit
+  command: "wget -P /tmp https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb"
+  when: not file_stat.stat.exists
+
+- name: Install CUDA Toolkit
+  apt:
+    deb: "/tmp/cuda-keyring_1.1-1_all.deb"
+    state: present
+  when: not file_stat.stat.exists
+
+- name: Clean up downloaded .deb file
+  file:
+    path: "/tmp/cuda-keyring_1.1-1_all.deb"
+    state: absent
+  when: not file_stat.stat.exists
+
+- name: Actualizar el índice de paquetes (apt-get update)
+  apt:
+    update_cache: yes
+
+- name: Update CUDA Toolkit
+  apt:
+    name: "cuda-toolkit-{{ latest_cuda_version }}"
+    state: present
+    update_cache: no
+
+# - name: Reiniciar el servidor
+#   command: sudo reboot

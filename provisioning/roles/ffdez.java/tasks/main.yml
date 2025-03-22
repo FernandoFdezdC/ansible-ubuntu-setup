@@ -1,0 +1,38 @@
+---
+- name: Install Java      # sudo apt install default-jdk -y
+  apt:
+    name: default-jdk
+    state: present        # Asegura que esté instalado
+    force_apt_get: yes
+
+- name: Check and show Java version
+  command: java -version
+  register: java_version
+  changed_when: false
+
+- debug:
+    msg: "Versión instalada de Java: {{ java_version.stderr | to_nice_yaml }}"
+  when: java_version.rc == 0
+
+# Establecer la variable de entorno:
+- set_fact:
+    export_var: "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64"
+- name: Check if ~/.bashrc already has this variable
+  shell: "cat /home/{{ ansible_user }}/.bashrc"
+  register: bashrc_output
+  changed_when: false
+# - debug:
+#     msg: "{{bashrc_output.stdout}}"
+- name: Check JAVA_HOME
+  debug:
+    msg: "JAVA_HOME is set: {{ export_var in bashrc_output.stdout }}"
+- name: Set JAVA_HOME to /usr/lib/jvm/java-11-openjdk-amd64
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "{{ export_var }}"
+    create: yes
+    state: present
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+- name: Make change definitive
+  shell: ". /home/{{ ansible_user }}/.bashrc"
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada

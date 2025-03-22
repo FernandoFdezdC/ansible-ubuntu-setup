@@ -1,0 +1,21 @@
+---
+- name: Make sure that connection to the machine can be established
+  ping:
+
+- name: Update package lists      # sudo apt update
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600  # Update the apt cache if its older than the cache_valid_time. This option is set in seconds.
+
+- name: Upgrade all installed packages    # sudo apt upgrade
+  apt:
+    upgrade: yes
+    cache_valid_time: 3600  # Update the apt cache if its older than the cache_valid_time. This option is set in seconds.
+
+- name: Perform a full distribution upgrade   # sudo apt dist-upgrade
+  apt:
+    upgrade: dist
+
+- name: Autoremove unnecessary packages       # sudo apt autoremove
+  apt:
+    autoremove: yes

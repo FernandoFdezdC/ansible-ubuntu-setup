@@ -1,0 +1,38 @@
+---
+# Incluir el rol de mheap.hadoop solo si cluster_manager es 'hadoop'
+- name: Incluir el rol mheap.hadoop si cluster_manager es 'hadoop'
+  ansible.builtin.include_role:
+    name: mheap.hadoop
+  when: cluster_manager == 'hadoop'
+
+- include_tasks: 'install_latest_spark_version.yml'
+  when: install_latest_spark_version
+
+- include_tasks: 'install_spark_{{ spark_version }}.yml'
+  when: not install_latest_spark_version
+
+# Incluir el rol de mheap.mysql solo si install_mysql_connector es true
+- name: Incluir el rol mheap.mysql si install_mysql_connector es true
+  ansible.builtin.include_role:
+    name: mheap.mysql
+  when: install_mysql_connector
+
+- include_tasks: 'install_mysql-connector.yml'
+  when: install_mysql_connector
+
+- include_tasks: 'install_jupyter_notebook.yml'
+  when: install_jupyter_notebook
+
+- include_tasks: 'spark_hadoop_environment_variable.yml'
+  when: cluster_manager == 'hadoop'
+
+- name: create jupyter notebook for checking Spark
+  copy:
+    src: spark-test.ipynb
+    dest: "/home/{{ ansible_user }}/spark-test.ipynb"
+
+- name: create jupyter notebook for checking connection between Spark and MySQL
+  copy:
+    src: connect_spark_to_sql-test.ipynb
+    dest: "/home/{{ ansible_user }}/connect_spark_to_sql-test.ipynb"
+  when: install_mysql_connector

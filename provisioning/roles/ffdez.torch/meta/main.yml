@@ -1,0 +1,3 @@
+dependencies:
+  - mheap.python
+  - mheap.cuda

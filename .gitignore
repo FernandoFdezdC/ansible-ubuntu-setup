@@ -1,0 +1,11 @@
+.vagrant/*
+.vscode/*
+*.txt
+*.pdf
+**/__pycache__/*
+**/.ipynb_checkpoints/*
+provisioning/playbook*
+!provisioning/playbook_ubuntu_windows_terminal.yml
+!provisioning/playbook.yml
+!provisioning/playbook_ssh.yml
+provisioning/wget-log*

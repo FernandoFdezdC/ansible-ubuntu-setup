@@ -1,0 +1,6 @@
+cluster_manager: 'standalone'     # standalone cluster manager that comes prepackaged with Spark
+spark_mode: 'local'
+install_latest_spark_version: true
+spark_version: '3.5.4'
+install_mysql_connector: false
+install_jupyter_notebook: false

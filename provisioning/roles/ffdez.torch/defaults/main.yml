@@ -1,0 +1,2 @@
+install_latest_torch_version: true
+torch_version: '12.1'

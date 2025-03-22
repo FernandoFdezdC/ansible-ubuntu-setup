@@ -1,0 +1,41 @@
+---
+- name: Asegurarse de que ssh esté instalado
+  apt:
+    name: ssh
+    state: present
+    update_cache: yes
+
+- name: Asegurarse de que pdsh esté instalado
+  apt:
+    name: pdsh
+    state: present
+
+# Establecer la variable de entorno. Esta variable hace que nos podamos conectar por ssh a través de pdsh.
+- set_fact:
+    export_var: "export PDSH_RCMD_TYPE=ssh"
+- name: Check if ~/.bashrc already has this variable
+  shell: "cat /home/{{ ansible_user }}/.bashrc"
+  register: bashrc_output
+  changed_when: false
+- name: Check PATH
+  debug:
+    msg: "PATH is set: {{ export_var in bashrc_output.stdout }}"
+- name: Set PDSH_RCMD_TYPE to ssh
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "{{ export_var }}"
+    create: yes
+    state: present
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+- name: Make change definitive
+  shell: ". /home/{{ ansible_user }}/.bashrc"
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+
+- name: Comprobar si el archivo ~/.ssh/id_rsa existe
+  ansible.builtin.stat:
+    path: "/home/{{ansible_user}}/.ssh/id_rsa"
+  register: file_stat
+
+# Solamente generar clave ssh cuando no exista
+- include_tasks: 'generate_ssh_key.yml'
+  when: not file_stat.stat.exists

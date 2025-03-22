@@ -1,0 +1,9 @@
+---
+- name: Install latest version of torch, torchvision, and torchaudio
+  # webpage: https://pytorch.org/get-started/locally/
+  pip:
+    name:
+      - torch
+      - torchvision
+      - torchaudio
+    executable: pip3

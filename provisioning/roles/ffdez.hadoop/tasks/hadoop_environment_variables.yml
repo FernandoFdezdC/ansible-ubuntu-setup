@@ -1,0 +1,84 @@
+---
+# Establecer la variable de entorno:
+- set_fact:
+    export_var: "export HADOOP_HOME=/opt/hadoop-3.3.6"
+- name: Check if ~/.bashrc already has this variable
+  shell: "cat /home/{{ ansible_user }}/.bashrc"
+  register: bashrc_output
+  changed_when: false
+- name: Check HADOOP_HOME
+  debug:
+    msg: "HADOOP_HOME is set: {{ export_var in bashrc_output.stdout }}"
+- name: Set HADOOP_HOME to /opt/hadoop-3.3.6
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "{{ export_var }}"
+    create: yes
+    state: present
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+- name: Make change definitive
+  shell: ". /home/{{ ansible_user }}/.bashrc"
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+
+# Establecer la variable de entorno:
+- set_fact:
+    export_var: "export PATH=$PATH:$HADOOP_HOME/bin"
+- name: Check if ~/.bashrc already has this variable
+  shell: "cat /home/{{ ansible_user }}/.bashrc"
+  register: bashrc_output
+  changed_when: false
+- name: Check PATH
+  debug:
+    msg: "PATH is set: {{ export_var in bashrc_output.stdout }}"
+- name: Set PATH to $PATH:$HADOOP_HOME/bin
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "{{ export_var }}"
+    create: yes
+    state: present
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+- name: Make change definitive
+  shell: ". /home/{{ ansible_user }}/.bashrc"
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+
+# Establecer la variable de entorno:
+- set_fact:
+    export_var: "export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop"
+- name: Check if ~/.bashrc already has this variable
+  shell: "cat /home/{{ ansible_user }}/.bashrc"
+  register: bashrc_output
+  changed_when: false
+- name: Check PATH
+  debug:
+    msg: "PATH is set: {{ export_var in bashrc_output.stdout }}"
+- name: Set HADOOP_CONF_DIR to $HADOOP_HOME/etc/hadoop
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "{{ export_var }}"
+    create: yes
+    state: present
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+- name: Make change definitive
+  shell: ". /home/{{ ansible_user }}/.bashrc"
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+
+# Establecer la variable de entorno:
+- set_fact:
+    export_var: "export HADOOP_CLASSPATH=/usr/lib/jvm/java-11-openjdk-amd64/lib/tools.jar"
+- name: Check if ~/.bashrc already has this variable
+  shell: "cat /home/{{ ansible_user }}/.bashrc"
+  register: bashrc_output
+  changed_when: false
+- name: Check PATH
+  debug:
+    msg: "PATH is set: {{ export_var in bashrc_output.stdout }}"
+- name: Set HADOOP_CLASSPATH to /usr/lib/jvm/java-11-openjdk-amd64/lib/tools.jar
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "{{ export_var }}"
+    create: yes
+    state: present
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+- name: Make change definitive
+  shell: ". /home/{{ ansible_user }}/.bashrc"
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada

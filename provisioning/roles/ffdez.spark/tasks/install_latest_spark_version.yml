@@ -1,0 +1,92 @@
+---
+- name: Get Apache Spark URL
+  ansible.builtin.uri:
+    url: "https://dlcdn.apache.org/spark/"
+    method: GET
+    return_content: yes
+  register: spark_page
+
+# - name: Show Spark page content
+#   debug:
+#     msg: "Page content: {{ spark_page.content }}"
+
+- name: Extract all available versions from the Apache Spark download page
+  set_fact:       # Only version 3!
+    spark_versions: "{{ spark_page.content | regex_findall('spark-(3+\\.\\d+\\.\\d+)/') }}"
+# - name: Show all found Spark versions
+#   debug:
+#     msg: "All found Spark versions: {{ spark_versions }}"
+
+# - name: Hacer prueba
+#   set_fact:       # Only version 3!
+#     spark_versions: ["3.5.1", "3.5.11", "3.4.123"]
+
+- name: Sort and select the latest Spark version
+  set_fact:
+    latest_spark_version: "{{ (spark_versions | map('regex_replace', '(\\d+\\.\\d+\\.\\d+)', '\\1') | map('split', '.')) | sort(reverse=true) | first | join('.') }}"
+  when: spark_versions | length > 0
+
+- name: Show latest Spark version
+  debug:
+    msg: "Latest found Spark version is: {{ latest_spark_version }}"
+  when: spark_versions | length > 0
+
+- name: Throw error
+  debug:
+    msg: "Latest Spark version not found. Version 3 is no longer supported."
+  when: spark_versions | length == 0
+
+- name: Check if Spark is already installed
+  ansible.builtin.stat:
+    path: "/opt/spark-{{ latest_spark_version }}-bin-hadoop3"
+  register: file_stat
+
+- name: Download the latest version of Apache Spark (in /tmp/)
+  get_url:
+    url: "https://dlcdn.apache.org/spark/spark-{{ latest_spark_version }}/spark-{{ latest_spark_version }}-bin-hadoop3.tgz"
+    dest: "/tmp/spark-{{ latest_spark_version }}-bin-hadoop3.tgz"
+    mode: '0644'
+  when: spark_versions | length > 0 and not file_stat.stat.exists
+
+- name: Remove existing Spark directory if it exists (in /opt/)
+  file:
+    path: "/opt/spark-{{ latest_spark_version }}-bin-hadoop3"
+    state: absent
+  when: spark_versions | length > 0 and not file_stat.stat.exists
+
+- name: Extract Apache Spark (to /opt/)
+  unarchive:
+    src: "/tmp/spark-{{ latest_spark_version }}-bin-hadoop3.tgz"
+    dest: "/opt/"
+    remote_src: yes
+    creates: "/opt/spark-{{ latest_spark_version }}-bin-hadoop3"
+  when: spark_versions | length > 0 and not file_stat.stat.exists
+
+- name: Remove the downloaded tar file (from /tmp/)
+  file:
+    path: "/tmp/spark-{{ latest_spark_version }}-bin-hadoop3.tgz"
+    state: absent
+  when: spark_versions | length > 0 and not file_stat.stat.exists
+
+# Establecer la variable de entorno:
+- set_fact:
+    export_var: "export SPARK_HOME=/opt/spark-{{ latest_spark_version }}-bin-hadoop3"
+- name: Check if ~/.bashrc already has this variable
+  shell: "cat /home/{{ ansible_user }}/.bashrc"
+  register: bashrc_output
+  changed_when: false
+# - debug:
+#     msg: "{{bashrc_output.stdout}}"
+- name: Check SPARK_HOME
+  debug:
+    msg: "SPARK_HOME is set: {{ export_var in bashrc_output.stdout }}"
+- name: Set SPARK_HOME to /opt/spark-{{ latest_spark_version }}-bin-hadoop3
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "{{ export_var }}"
+    create: yes
+    state: present
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+- name: Make change definitive
+  shell: ". /home/{{ ansible_user }}/.bashrc"
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada

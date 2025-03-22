@@ -1,0 +1,31 @@
+---
+- name: Check if Hadoop is already installed
+  ansible.builtin.stat:
+    path: "/opt/hadoop-3.3.6"
+  register: file_stat
+
+- name: Download Hadoop 3.3.6 (in /tmp/)
+  # It should be compatible with all versions of Spark 3.x.x
+  get_url:
+    url: https://dlcdn.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
+    dest: /tmp/hadoop-3.3.6.tar.gz
+    mode: '0644'
+  when: not file_stat.stat.exists
+
+- name: Extract Hadoop (to /opt/)
+  unarchive:
+    src: /tmp/hadoop-3.3.6.tar.gz
+    dest: /opt/
+    remote_src: yes
+    creates: /opt/hadoop-3.3.6
+  when: not file_stat.stat.exists
+
+- name: Remove the downloaded tar file (from /tmp/)
+  file:
+    path: /tmp/hadoop-3.3.6.tar.gz
+    state: absent
+  when: not file_stat.stat.exists
+
+- include_tasks: 'hadoop_environment_variables.yml'
+
+- include_tasks: 'configure_hadoop.yml'

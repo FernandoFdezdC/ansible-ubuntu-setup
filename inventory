@@ -1,0 +1,4 @@
+# Para ejecutar Ansible en la terminal de Ubuntu de Windows y que éste se conecte a una
+# máquina virtual (a través de ssh con con conexión Bridge Adapter):
+192.168.1.133 ansible_user=vbox1 ansible_password=pass ansible_become_password=pass
+# y poner en la PowerShell de Windows: wsl ansible-playbook -i inventory provisioning/playbook_ssh.yml

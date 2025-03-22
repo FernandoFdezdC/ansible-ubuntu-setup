@@ -1,0 +1,47 @@
+---
+- name: Check if Spark is already installed
+  ansible.builtin.stat:
+    path: "/opt/spark-3.5.4-bin-hadoop3"
+  register: file_stat
+
+- name: Download Apache Spark 3.5.4 (in /tmp/)
+  get_url:
+    url: https://dlcdn.apache.org/spark/spark-3.5.4/spark-3.5.4-bin-hadoop3.tgz
+    dest: /tmp/spark-3.5.4-bin-hadoop3.tgz
+    mode: '0644'
+  when: not file_stat.stat.exists
+
+- name: Extract Apache Spark (to /opt/)
+  unarchive:
+    src: /tmp/spark-3.5.4-bin-hadoop3.tgz
+    dest: /opt/
+    remote_src: yes
+    creates: /opt/spark-3.5.4-bin-hadoop3
+  when: not file_stat.stat.exists
+
+- name: Remove the downloaded tar file (from /tmp/)
+  file:
+    path: /tmp/spark-3.5.4-bin-hadoop3.tgz
+    state: absent
+  when: not file_stat.stat.exists
+
+# Establecer la variable de entorno:
+- set_fact:
+    export_var: "export SPARK_HOME=/opt/spark-3.5.4-bin-hadoop3"
+- name: Check if ~/.bashrc already has this variable
+  shell: "cat /home/{{ ansible_user }}/.bashrc"
+  register: bashrc_output
+  changed_when: false
+- name: Check SPARK_HOME
+  debug:
+    msg: "SPARK_HOME is set: {{ export_var in bashrc_output.stdout }}"
+- name: Set SPARK_HOME to /opt/spark-3.5.4-bin-hadoop3
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "{{ export_var }}"
+    create: yes
+    state: present
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+- name: Make change definitive
+  shell: ". /home/{{ ansible_user }}/.bashrc"
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada

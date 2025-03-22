@@ -1,0 +1,11 @@
+---
+- include_tasks: 'install_latest_torch_version.yml'
+  when: install_latest_torch_version
+
+- include_tasks: 'install_{{ torch_version }}_torch.yml'
+  when: torch_version
+
+- name: create jupyter notebook for checking PyTorch and its connection with cuda
+  copy:
+    src: torch-test.ipynb
+    dest: "/home/{{ ansible_user }}/torch-test.ipynb"

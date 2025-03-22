@@ -1,0 +1,21 @@
+---
+# Establecer la variable de entorno:
+- set_fact:
+    export_var: "export SPARK_DIST_CLASSPATH=$(hadoop classpath)"
+- name: Check if ~/.bashrc already has this variable
+  shell: "cat /home/{{ ansible_user }}/.bashrc"
+  register: bashrc_output
+  changed_when: false
+- name: Check PATH
+  debug:
+    msg: "PATH is set: {{ export_var in bashrc_output.stdout }}"
+- name: Set SPARK_DIST_CLASSPATH to $(hadoop classpath)
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "{{ export_var }}"
+    create: yes
+    state: present
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+- name: Make change definitive
+  shell: ". /home/{{ ansible_user }}/.bashrc"
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada

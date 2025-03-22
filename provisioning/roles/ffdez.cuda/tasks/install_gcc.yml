@@ -1,0 +1,6 @@
+---
+- name: Install gcc compiler
+  apt:
+    name: gcc
+    state: present
+    update_cache: yes

@@ -1,0 +1,24 @@
+---
+- name: Get CUDA Toolkit URL
+  ansible.builtin.uri:
+    url: "https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=22.04&target_type=deb_network"
+    method: GET
+    return_content: yes
+  register: cuda_toolkit_page
+
+- name: Extract CUDA Toolkit versions
+  set_fact:
+    cuda_versions: "{{ cuda_toolkit_page.content | regex_findall('cuda-toolkit-(\\d+\\-\\d+)') }}"
+# - name: Show all found cuda versions
+#   debug:
+#     msg: "All found CUDA Toolkit versions: {{ cuda_versions }}"
+
+- name: Sort and select latest CUDA Toolkit version
+  set_fact:
+    latest_cuda_version: "{{ (cuda_versions | map('regex_replace', '(\\d+\\-\\d+)', '\\1') | map('split', '.')) | sort(reverse=true) | first | join('-') }}"
+  when: cuda_versions | length > 0
+
+- name: Show latest CUDA Toolkit version
+  debug:
+    msg: "Latest found CUDA Toolkit version is: {{ latest_cuda_version }}"
+  when: cuda_versions | length > 0

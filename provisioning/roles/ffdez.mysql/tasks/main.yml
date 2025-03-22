@@ -1,0 +1,53 @@
+---
+# - name: Generate new root password
+#   command: openssl rand -hex 7      # Contraseña aleatoria
+#   register: mysql_new_root_pass
+
+- name: Install MySQL and python-myslqdb
+  apt: name={{ item }} update_cache=yes cache_valid_time=3600 state=present
+  with_items:
+    - python3-mysqldb
+    - mysql-server
+
+- name: start up the mysql service
+  service:
+    name: mysql
+    state: started
+- name: ensure mysql is enabled to run on startup
+  service:
+    name: mysql
+    state: started
+    enabled: true
+
+- name: Get current root password hash
+  mysql_user:
+    name: root
+    host: "{{ item }}"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    check_implicit_admin: yes
+  loop:
+    - "{{ ansible_hostname }}"
+    - 127.0.0.1
+    - ::1
+    - localhost
+  register: mysql_root_user_info
+
+- name: Update mysql root password for all root accounts if needed
+  mysql_user:
+    name: root
+    host: "{{ item }}"
+    password: "{{ mysql_root_password }}"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    check_implicit_admin: yes
+    priv: "*.*:ALL,GRANT"
+    state: present
+  loop:
+    - "{{ ansible_hostname }}"
+    - 127.0.0.1
+    - ::1
+    - localhost
+  when: mysql_root_user_info.results | selectattr('changed', 'equalto', true) | list | length > 0
+  notify:
+    - restart mysql

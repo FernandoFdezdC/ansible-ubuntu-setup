@@ -1,0 +1,51 @@
+---
+- name: Instalar Jupyter Notebook
+  ansible.builtin.apt:
+    name: jupyter-notebook
+    state: present
+
+# Establecer la variable de entorno:
+- set_fact:
+    export_var: "export PYSPARK_DRIVER_PYTHON=jupyter"
+- name: Check if ~/.bashrc already has this variable
+  shell: "cat /home/{{ ansible_user }}/.bashrc"
+  register: bashrc_output
+  changed_when: false
+# - debug:
+#     msg: "{{bashrc_output.stdout}}"
+- name: Check PYSPARK_DRIVER_PYTHON
+  debug:
+    msg: "PYSPARK_DRIVER_PYTHON is set: {{ export_var in bashrc_output.stdout }}"
+- name: Set PYSPARK_DRIVER_PYTHON to jupyter
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "{{ export_var }}"
+    create: yes
+    state: present
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+- name: Make change definitive
+  shell: ". /home/{{ ansible_user }}/.bashrc"
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+
+# Establecer la variable de entorno:
+- set_fact:
+    export_var: "export PYSPARK_DRIVER_PYTHON_OPTS='notebook --no-browser --port=8889'"
+- name: Check if ~/.bashrc already has this variable
+  shell: "cat /home/{{ ansible_user }}/.bashrc"
+  register: bashrc_output
+  changed_when: false
+# - debug:
+#     msg: "{{bashrc_output.stdout}}"
+- name: Check PYSPARK_DRIVER_PYTHON_OPTS
+  debug:
+    msg: "PYSPARK_DRIVER_PYTHON_OPTS is set: {{ export_var in bashrc_output.stdout }}"
+- name: Set PYSPARK_DRIVER_PYTHON_OPTS to 'notebook --no-browser --port=8889'
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "{{ export_var }}"
+    create: yes
+    state: present
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
+- name: Make change definitive
+  shell: ". /home/{{ ansible_user }}/.bashrc"
+  when: export_var not in bashrc_output.stdout # Solo se ejecuta si la variable no está definida o está desactualizada
